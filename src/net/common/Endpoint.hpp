@@ -17,10 +17,14 @@
 
 #include <vector>
 #include <assert.h>
+#include <cstring>
 #include <iostream>
 
-#include "IPVersion.hpp"
+#include <net/common/IPVersion.hpp>
+#include <net/common/NetTypes.hpp>
+
 #include "lib_includes.hpp"
+
 #include "../../util/string/RustyString.hpp"
 
 namespace net

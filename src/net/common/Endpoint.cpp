@@ -8,65 +8,65 @@
  */
 net::Endpoint::Endpoint(const char* ip, unsigned short port)
 {
-      this->port = port;
+    this->port = port;
 
-      /* IPv4 */
-      in_addr addr; // Location to store the ipv4 address
-      int res = inet_pton(AF_INET, ip, &addr);
+    /* IPv4 */
+    in_addr addr; // Location to store the ipv4 address
+    int res = inet_pton(AF_INET, ip, &addr);
 
-      if (res == 1)
-      {
-            if (addr.S_un.S_addr != INADDR_NONE)
-            {
-                  ip_string = ip;
-                  hostname = ip;
-
-                  ip_bytes.resize(sizeof(ULONG));
-                  memcpy(&ip_bytes[0], &addr.S_un.S_addr, sizeof(ULONG));
-
-                  ip_version = IPVersion::IPv4;
-                  return;
-            }
-      }
-
-      // Attempt to resolve the hostname to Ipv4 address
-      addrinfo hints = {};
-      hints.ai_family = AF_INET;
-      addrinfo* hostinfo = nullptr;
-      res = getaddrinfo(ip, NULL, &hints, &hostinfo);
-
-      if (res == 0)
-      {
-            sockaddr_in* host_addr = reinterpret_cast<sockaddr_in*>(hostinfo->ai_addr);
-
-            ip_string.resize(16);
-            inet_ntop(AF_INET, &host_addr->sin_addr, &ip_string[0], 16);
-
+    if (res == 1)
+    {
+        if (addr.s_addr != INADDR_NONE)
+        {
+            ip_string = ip;
             hostname = ip;
 
-            ULONG ip_long = host_addr->sin_addr.S_un.S_addr; // Get the IP address as unsigned long
-            ip_bytes.resize(sizeof(ULONG));
-            memcpy(&ip_bytes[0], &ip_long, sizeof(ULONG));   // Copy the bytes to our IP bytes vector
+            ip_bytes.resize(sizeof(ulong));
+            memcpy(&ip_bytes[0], &addr.s_addr, 4);
 
             ip_version = IPVersion::IPv4;
-
-            freeaddrinfo(hostinfo); // Memory cleanup from getaddrinfo()
             return;
-      }
+        }
+    }
 
-      /* IPv6 */
-      in6_addr addr6; // Location to store the ipv6 address
+    // Attempt to resolve the hostname to Ipv4 address
+    addrinfo hints = {};
+    hints.ai_family = AF_INET;
+    addrinfo* hostinfo = nullptr;
+    res = getaddrinfo(ip, NULL, &hints, &hostinfo);
+
+    if (res == 0)
+    {
+        sockaddr_in* host_addr = reinterpret_cast<sockaddr_in*>(hostinfo->ai_addr);
+
+        ip_string.resize(16);
+        inet_ntop(AF_INET, &host_addr->sin_addr, &ip_string[0], 16);
+
+        hostname = ip;
+
+        ulong ip_long = host_addr->sin_addr.s_addr; // Get the IP address as unsigned long
+        ip_bytes.resize(sizeof(ulong) - 4);
+        memcpy(&ip_bytes[0], &ip_long, 4);   // Copy the bytes to our IP bytes vector
+
+        ip_version = IPVersion::IPv4;
+
+        freeaddrinfo(hostinfo); // Memory cleanup from getaddrinfo()
+        return;
+    }
+
+    /* IPv6 */
+    in6_addr addr6; // Location to store the ipv6 address
 	res = inet_pton(AF_INET6, ip, &addr6);
 
 	if (res == 1)
 	{
-	      ip_string = ip;
+	    ip_string = ip;
 		hostname = ip;
 		util::string::trim(ip_string);
 		util::string::trim(hostname);
 
 		ip_bytes.resize(16);
-		memcpy(&ip_bytes[0], &addr6.u, 16);
+		memcpy(&ip_bytes[0], &addr6.__in6_u, 16);
 
 		ip_version = IPVersion::IPv6;
 		return;
@@ -75,7 +75,7 @@ net::Endpoint::Endpoint(const char* ip, unsigned short port)
 	// Attempt to resolve hostname to ipv6 address
 	addrinfo hintsv6 = {};
 	hints.ai_family = AF_INET6; //ipv6 addresses only
-	addrinfo * hostinfov6 = nullptr;
+	addrinfo* hostinfov6 = nullptr;
 	res = getaddrinfo(ip, NULL, &hintsv6, &hostinfov6);
 
 	if (res == 0)
@@ -106,7 +106,7 @@ net::Endpoint::Endpoint(const char* ip, unsigned short port)
  */
 net::Endpoint::Endpoint(sockaddr* addr)
 {
-      assert(addr->sa_family == AF_INET || addr->sa_family == AF_INET6);
+    assert(addr->sa_family == AF_INET || addr->sa_family == AF_INET6);
 	
 	if (addr->sa_family == AF_INET) //IPv4
 	{
@@ -114,8 +114,8 @@ net::Endpoint::Endpoint(sockaddr* addr)
 		ip_version = IPVersion::IPv4;
 		port = ntohs(addrv4->sin_port);
 
-		ip_bytes.resize(sizeof(ULONG));
-		memcpy(&ip_bytes[0], &addrv4->sin_addr, sizeof(ULONG));
+		ip_bytes.resize(sizeof(ulong));
+		memcpy(&ip_bytes[0], &addrv4->sin_addr, sizeof(ulong));
 		
 		ip_string.resize(16);
 		inet_ntop(AF_INET, &addrv4->sin_addr, &ip_string[0], 16);
@@ -200,7 +200,7 @@ sockaddr_in net::Endpoint::get_sockaddr_ipv4() const
 	assert(ip_version == IPVersion::IPv4);
 	sockaddr_in addr = {};
 	addr.sin_family = AF_INET;
-	memcpy(&addr.sin_addr, &ip_bytes[0], sizeof(ULONG));
+	memcpy(&addr.sin_addr, &ip_bytes[0], sizeof(ulong));
 	addr.sin_port = htons(port);
 	return addr;
 }

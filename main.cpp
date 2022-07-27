@@ -11,11 +11,19 @@
 
 #include <iostream>
 
-#include <net/Endpoint.hpp>
+#include <net/common/Endpoint.hpp>
+#include <net/common/packet/Packet.hpp>
 
 int main(void) 
 {
-    net::Endpoint ep("127.0.0.1", 80);
+    net::Packet p(net::PacketType::PT_Message);
+
+    p << "Hello!";
+
+    std::cout << "Packet size: " << p.getPacketSize() << std::endl;
+    std::cout << "Packet type: " << p.getPacketType() << std::endl;
+
+    net::Endpoint ep("google.com", 80);
 
     ep.print();
 
